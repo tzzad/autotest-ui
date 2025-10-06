@@ -18,7 +18,7 @@ with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=False)
         context = browser.new_context(storage_state='browse1r-state.json')
         page = context.new_page()
-        page.goto('https://k8s-devtest2.goulash.tech/')
+        page.goto('https://k8s-devtest2.goulash.tech/promoevent/promoevent/create')
 
         page.wait_for_timeout(3000)
         print('ura')
