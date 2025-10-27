@@ -10,10 +10,10 @@ def test_regretion_case():
 
 
 class testsuit:
-    @pytest.mark.smokek
+    @pytest.mark.smoke
     def test_regretion_case(self):
         ...
 
-    @pytest.mark.smokig
+    @pytest.mark.smoke
     def test_smoke_case(self):
         ...
