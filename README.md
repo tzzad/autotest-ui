@@ -1,1 +1,1 @@
-Vsem hello su4ki niggers
+Nothing text
