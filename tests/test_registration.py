@@ -16,6 +16,6 @@ def test_succesful_registration(chromium_page: Page):
 
         dashboard_title = chromium_page.get_by_test_id('dashboard-toolbar-title-text')
         expect(dashboard_title).to_be_visible()
-
+        opcode
 
 
