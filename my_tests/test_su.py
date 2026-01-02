@@ -27,7 +27,7 @@ with (sync_playwright() as playwright):
     page.locator('#Promoevent_is_active').click()
     page.select_option('#Promoevent_usage', '1') # выбираем value из выпадающего списка
     page.click('#promo')
-    #expect('Promoevent__code').not.toHaveValue(''); #разобраться как проверить что проле заполнено
+    #expect('Promoevent_code').not.toHaveValue(''); #разобраться как проверить что проле заполнено
     page.click('#yt23')
     page.wait_for_timeout(200)
     page.select_option('condition-type', '2')
