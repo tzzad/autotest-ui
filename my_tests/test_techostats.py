@@ -1,8 +1,9 @@
+import logging
 from symtable import Class
 import pytest
 from playwright.sync_api import sync_playwright, expect, playwright, Playwright, Page
 
-# class  CreateUser():
 
-def system_user(open_system):
-    ...
+def  test_system_user(open_system, create_promoevent):
+    page = open_system
+    logging.info("Ссылка открыта")
