@@ -1,3 +1,5 @@
-pytest_plugins = (
+import pytest
+
+pytest_plugins = [
     "fixtures.browsers"
-)
+]
