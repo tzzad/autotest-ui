@@ -3,7 +3,7 @@ from playwright.sync_api import Page, Playwright
 
 
 @pytest.fixture(scope="session")
-def open_system(playwright: Playwright) -> Page:
+def  open_system(playwright: Playwright) -> Page:
     browser = playwright.chromium.launch(headless=False)
     context = browser.new_context()
     page = context.new_page()
