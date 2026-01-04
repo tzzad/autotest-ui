@@ -8,19 +8,13 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 
 # --- CONFIG ---
-TOKEN = '8081361112:AAGZwePq8S8_lUOIHUubyssc4lGGG3WiOds'
-BOT_USERNAME = 'nikaeat_bot'
-DB_NAME = 'menu_bot.db'
+
 
 # Используем английские ключи для стабильности
 C_MAP = {"Завтрак": "breakfast", "Гарнир": "side", "Мясо": "meat", "Ужин": "dinner"}
 R_MAP = {v: k for k, v in C_MAP.items()}
 
 class AddDish(StatesGroup): name = State(); cat = State(); sweet = State(); ingr = State()
-class EditDish(StatesGroup): dish_id = State(); field = State(); value = State()
-class DelDish(StatesGroup): dish_id = State()
-class ViewDish(StatesGroup): dish_id = State()
-class FamilyState(StatesGroup): creating = State(); joining = State(); confirming_join = State(); expelling = State(); deleting = State()
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN); dp = Dispatcher(storage=MemoryStorage())
@@ -51,14 +45,6 @@ def get_dish_count(oid, otyp):
         return res[0]
 
 # --- KEYBOARDS ---
-def main_kb(count=0):
-    btns = []
-    if count >= 4: btns.append([types.KeyboardButton(text="🍽 Генерация меню")])
-    if count > 0:
-        btns.append([types.KeyboardButton(text="📜 Список всех блюд"), types.KeyboardButton(text="🔍 Просмотр состава")])
-        btns.append([types.KeyboardButton(text="✏️ Отредактировать"), types.KeyboardButton(text="🗑 Удалить блюдо")])
-    btns.append([types.KeyboardButton(text="➕ Добавить блюдо"), types.KeyboardButton(text="🏠 Семья")])
-    return types.ReplyKeyboardMarkup(keyboard=btns, resize_keyboard=True)
 
 def cancel_kb():
     return types.ReplyKeyboardMarkup(keyboard=[[types.KeyboardButton(text="❌ Отмена")]], resize_keyboard=True)
@@ -82,25 +68,6 @@ async def start_cmd(m: types.Message, state: FSMContext):
     await m.answer(f"Привет! Я бот @{BOT_USERNAME}.", reply_markup=main_kb(get_dish_count(oid, otyp)))
 
 # --- JOIN FAMILY ---
-async def do_join(m, state, fid, fname):
-    with get_db() as conn:
-        conn.execute("UPDATE users SET family_id = ? WHERE user_id = ?", (fid, m.from_user.id))
-        conn.commit()
-    count = get_dish_count(fid, 'family')
-    await m.answer(f"🏠 Добро пожаловать в семью {fname}!", reply_markup=main_kb(count))
-    await state.clear()
-
-async def start_join_proc(m, state, token):
-    target_fam = None
-    with get_db() as conn: target_fam = conn.execute("SELECT * FROM families WHERE token = ?", (token,)).fetchone()
-    if not target_fam: return await m.answer("❌ Неверный токен.")
-    d_cnt = get_dish_count(m.from_user.id, 'user')
-    if d_cnt > 0:
-        kb = [[types.KeyboardButton(text="✅ Удалить мои блюда и вступить")],[types.KeyboardButton(text="❌ Отмена")]]
-        await m.answer(f"⚠️ Ваши личные блюда ({d_cnt} шт) будут удалены. Согласны?", reply_markup=types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True))
-        await state.set_state(FamilyState.confirming_join)
-    else: await do_join(m, state, target_fam['id'], target_fam['name'])
-
 @dp.message(FamilyState.confirming_join, F.text == "✅ Удалить мои блюда и вступить")
 async def join_confirm(m: types.Message, state: FSMContext):
     dt = await state.get_data(); tk = dt.get('temp_token'); target_fam = None
@@ -110,6 +77,15 @@ async def join_confirm(m: types.Message, state: FSMContext):
             conn.execute("DELETE FROM dishes WHERE owner_id = ? AND owner_type = 'user'", (m.from_user.id,))
             conn.commit()
     if target_fam: await do_join(m, state, target_fam['id'], target_fam['name'])
+
+
+async def do_join(m, state, fid, fname):
+    with get_db() as conn:
+        conn.execute("UPDATE users SET family_id = ? WHERE user_id = ?", (fid, m.from_user.id))
+        conn.commit()
+    count = get_dish_count(fid, 'family')
+    await m.answer(f"🏠 Добро пожаловать в семью {fname}!", reply_markup=main_kb(count))
+    await state.clear()
 
 # --- FAMILY ---
 @dp.message(F.text == "🏠 Семья")
@@ -132,17 +108,6 @@ async def fam_menu(m: types.Message):
 async def fam_c1(m: types.Message, state: FSMContext):
     await m.answer("Введите название семьи:", reply_markup=cancel_kb()); await state.set_state(FamilyState.creating)
 
-@dp.message(FamilyState.creating)
-async def fam_c2(m: types.Message, state: FSMContext):
-    tk = ''.join(random.choices(string.ascii_lowercase + string.digits, k=10))
-    tk = f"{tk[:4]}-{tk[4:8]}-{tk[8:]}"
-    with get_db() as conn:
-        cur = conn.cursor()
-        cur.execute("INSERT INTO families (name, token, head_id) VALUES (?, ?, ?)", (m.text, tk, m.from_user.id))
-        fid = cur.lastrowid
-        conn.execute("UPDATE users SET family_id = ? WHERE user_id = ?", (fid, m.from_user.id))
-        conn.commit()
-    await m.answer(f"✅ Семья создана!\nТокен: <code>{tk}</code>", parse_mode="HTML", reply_markup=main_kb(0)); await state.clear()
 
 @dp.message(F.text == "👥 Члены семьи")
 async def fam_members(m: types.Message):
@@ -171,20 +136,6 @@ async def fam_del_q(m: types.Message, state: FSMContext):
         await m.answer(f"Удалить семью {f['name']}? ВСЕ блюда будут стерты!", reply_markup=types.ReplyKeyboardMarkup(keyboard=[[types.KeyboardButton(text="💀 Да, удалить всё"), types.KeyboardButton(text="❌ Отмена")]], resize_keyboard=True))
         await state.set_state(FamilyState.deleting)
 
-@dp.message(FamilyState.deleting, F.text == "💀 Да, удалить всё")
-async def fam_del_yes(m: types.Message, state: FSMContext):
-    with get_db() as conn:
-        u = conn.execute("SELECT family_id FROM users WHERE user_id = ?", (m.from_user.id,)).fetchone()
-        fid = u['family_id']
-        mems = conn.execute("SELECT user_id FROM users WHERE family_id = ?", (fid,)).fetchall()
-        for r in mems:
-            try: await bot.send_message(r['user_id'], f"⚠️ {m.from_user.full_name} удалил семью.")
-            except: pass
-        conn.execute("UPDATE users SET family_id = NULL WHERE family_id = ?", (fid,))
-        conn.execute("DELETE FROM dishes WHERE owner_id = ? AND owner_type = 'family'", (fid,))
-        conn.execute("DELETE FROM families WHERE id = ?", (fid,))
-        conn.commit()
-    await m.answer("Семья удалена.", reply_markup=main_kb(0)); await state.clear()
 
 @dp.message(F.text == "🚪 Уйти из семьи")
 async def fam_leave_q(m: types.Message):
