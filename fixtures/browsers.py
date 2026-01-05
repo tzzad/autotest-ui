@@ -8,7 +8,7 @@ def chromium_page(playwright) -> Generator[Any, Any, None]:
     browser = playwright.chromium.launch(headless=False)
     yield browser.new_page()
     browser.close()
-
+# return — "отдал и ушел", yield — "отдал и жду следующей команды".
 
 @pytest.fixture(scope="session")
 def initialize_browser_state(playwright):
