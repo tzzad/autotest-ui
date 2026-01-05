@@ -21,7 +21,3 @@ with sync_playwright() as playwright:
     page = context.new_page()
     page.goto('https://nikita-filonov.github.io/qa-automation-engineer-ui-course/#/auth/login')
 
-
-
-    page.wait_for_timeout(3008)
-    print('Uspex')
