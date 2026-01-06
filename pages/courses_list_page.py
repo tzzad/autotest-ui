@@ -47,13 +47,14 @@ class CoursesListPage(BasePage):
         expect(self.create_course_button).to_be_visible()
 
 
-    def check_visible_course_card(self,                   #index - для проверки нескольких элементов с одинаковым data-test-id на странице
+    def check_visible_course_card(
+                                  self,                   #index - для проверки нескольких элементов с одинаковым data-test-id на странице
                                   index: int,
                                   title:str,
                                   max_score:str,
                                   min_score:str,
                                   estimated_time:str
-                                                    ):
+                                  ):
         expect(self.course_image.nth(index)).to_be_visible()
 
         expect(self.course_title.nth(index)).to_be_visible()
