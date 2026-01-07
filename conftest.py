@@ -1,4 +1,5 @@
 import pytest
+from playwright.sync_api import Browser, Playwright
 
 pytest_plugins = [
     "fixtures.browsers",
@@ -6,5 +7,4 @@ pytest_plugins = [
     ""
 ]
 
-# сюда прописываются все файлы с фикстурами, чтобы использовать их во всех папках
 
