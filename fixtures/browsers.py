@@ -1,4 +1,5 @@
 import pytest
+from _pytest.fixtures import SubRequest
 from playwright.sync_api import Page, Playwright
 
 
@@ -30,12 +31,13 @@ def initialize_browser_state(playwright: Playwright):
     registration_button.click()
 
     context.storage_state(path="browser-state.json")
-    yield page
     browser.close()
 
-@pytest.fixture
-def chromium_page_with_state(initialize_browser_state, playwright: Playwright) -> Page:
+@pytest.fixture()
+def chromium_page_with_state(initialize_browser_state, playwright: Playwright, request: SubRequest) -> Page:
+    # Фикстуру необходимо передавать в тест
+
     browser = playwright.chromium.launch(headless=False)
-    context = browser.new_context(storage_state="browser-state.json")
+    context = browser.new_context(storage_state='browser-state.json')
     yield context.new_page()
     browser.close()
