@@ -4,6 +4,10 @@ from components.base_component import BaseComponent
 
 
 class EmptyViewComponent(BaseComponent):
+    def __init__(self, page: Page):
+        super().__init__(page)
+        self.icon = None
+
     def init_page(self, page: Page, identifier: str):
         super().__init__(page)
 
@@ -19,3 +23,5 @@ class EmptyViewComponent(BaseComponent):
 
         expect(self.description).to_have_text(description)
         expect(self.description).to_be_visible()
+
+        # test request
