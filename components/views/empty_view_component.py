@@ -23,5 +23,3 @@ class EmptyViewComponent(BaseComponent):
 
         expect(self.description).to_have_text(description)
         expect(self.description).to_be_visible()
-
-        # test request
